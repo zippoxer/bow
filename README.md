@@ -85,11 +85,11 @@ type Page struct {
 }
 ```
 
-Keys must be a string, a byte slice, any built-in integer or a type that implements `Marshaler` and `Unmarshaler`.
+Keys must be a string, a byte slice, any built-in integer or a type that implements [`codec.Marshaler`](https://godoc.org/github.com/zippoxer/bow/codec#Marshaler) and [`codec.Unmarshaler`](https://godoc.org/github.com/zippoxer/bow/codec#Unmarshaler).
 
 #### Randomly generated keys
 
-`Id` is a convenient placeholder for Bow's randomly generated keys.
+[`Id`](https://godoc.org/github.com/zippoxer/bow#Id) is a convenient placeholder for Bow's randomly generated keys.
 
 ```go
 type Page struct {
