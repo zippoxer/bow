@@ -31,7 +31,7 @@ const version = 1
 const bucketIdSize = 2
 
 // MaxBuckets is the maximum amount of buckets that can be created in a database.
-const MaxBuckets = math.MaxUint16 - 1
+const MaxBuckets = math.MaxUint16 - (8 * 256)
 
 // First byte of reserved Badger keys.
 const reserved byte = 0x00
