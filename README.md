@@ -1,4 +1,4 @@
-# Bow
+# Bow [![GoDoc](https://godoc.org/github.com/zippoxer/bow?status.svg)](https://godoc.org/github.com/zippoxer/bow)
 
 Bow is a minimal embedded database powered by Badger. 
 
