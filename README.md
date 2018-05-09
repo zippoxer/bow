@@ -16,7 +16,6 @@ Bow is powered by [BadgerDB](https://github.com/dgraph-io/badger), implementing 
     - [Randomly generated keys](#randomly-generated-keys)
   + [Persisting a structure](#persisting-a-structure)
   + [Retrieving a structure](#retrieving-a-structure)
-  + [Updating a structure](#updating-a-structure)
   + [Iterating a bucket](#iterating-a-bucket)
     - [Prefix iteration](#prefix-iteration)
   + [Serialization](#serialization)
