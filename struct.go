@@ -11,7 +11,7 @@ var (
 	structCache   = make(map[reflect.Type]int)
 	structCacheMu sync.RWMutex
 
-	typeOfId = reflect.TypeOf(Id{})
+	typeOfId = reflect.TypeOf(Id(""))
 )
 
 type structType struct {

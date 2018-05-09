@@ -44,7 +44,7 @@ func (b *Bucket) PutBytes(key interface{}, data []byte) error {
 	}
 	var ik []byte
 	if len(keyBytes) == 0 {
-		ik = b.internalKey(NewId())
+		ik = b.internalKey([]byte(NewId()))
 	} else {
 		ik = b.internalKey(keyBytes)
 	}

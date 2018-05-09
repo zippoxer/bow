@@ -60,7 +60,7 @@ var (
 )
 
 // Id is a convenient type for randomly generated keys.
-type Id []byte
+type Id string
 
 // NewId generates an 8-byte unique Id.
 func NewId() Id {
@@ -70,32 +70,32 @@ func NewId() Id {
 	}
 	b := make([]byte, 8)
 	binary.BigEndian.PutUint64(b, id)
-	return b
+	return Id(b)
 }
 
 // ParseId parses the user-friendly output of String to an Id.
 func ParseId(s string) (Id, error) {
 	if len(s) != 8 {
-		return nil, fmt.Errorf("bow.ParseId: input must be exactly 8 bytes long")
+		return "", fmt.Errorf("bow.ParseId: input must be exactly 8 bytes long")
 	}
 	b, err := base64.RawURLEncoding.DecodeString(s)
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 	return Id(b), nil
 }
 
 // String returns a user-friendly format of the Id.
 func (id Id) String() string {
-	return base64.RawURLEncoding.EncodeToString(id)
+	return base64.RawURLEncoding.EncodeToString([]byte(id))
 }
 
 func (id Id) Marshal(in []byte) ([]byte, error) {
-	return id, nil
+	return []byte(id), nil
 }
 
 func (id *Id) Unmarshal(b []byte) error {
-	*id = b
+	*id = Id(b)
 	return nil
 }
 
