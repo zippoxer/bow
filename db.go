@@ -75,12 +75,12 @@ func NewId() Id {
 
 // ParseId parses the user-friendly output of String to an Id.
 func ParseId(s string) (Id, error) {
-	if len(s) != 8 {
-		return "", fmt.Errorf("bow.ParseId: input must be exactly 8 bytes long")
-	}
 	b, err := base64.RawURLEncoding.DecodeString(s)
 	if err != nil {
 		return "", err
+	}
+	if len(b) != 8 {
+		return "", fmt.Errorf("bow.ParseId: input must be exactly 8 bytes long")
 	}
 	return Id(b), nil
 }
@@ -88,6 +88,28 @@ func ParseId(s string) (Id, error) {
 // String returns a user-friendly format of the Id.
 func (id Id) String() string {
 	return base64.RawURLEncoding.EncodeToString([]byte(id))
+}
+
+func (id Id) MarshalJSON() ([]byte, error) {
+	s := id.String()
+	b := make([]byte, len(s)+2)
+	b[0] = '"'
+	copy(b[1:], s)
+	b[len(b)-1] = '"'
+	return b, nil
+}
+
+func (id *Id) UnmarshalJSON(data []byte) error {
+	var s string
+	err := json.Unmarshal(data, &s)
+	if err != nil {
+		return err
+	}
+	if s == "" {
+		return nil
+	}
+	*id, err = ParseId(s)
+	return err
 }
 
 func (id Id) Marshal(in []byte) ([]byte, error) {
