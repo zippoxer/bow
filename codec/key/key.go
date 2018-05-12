@@ -55,8 +55,10 @@ func (c Codec) Unmarshal(data []byte, v interface{}) error {
 		if err := binary.Read(bytes.NewReader(data), binary.BigEndian, v); err != nil {
 			return err
 		}
+	default:
+		return fmt.Errorf("%T is not a valid key type", v)
 	}
-	return fmt.Errorf("%T is not a valid key type", v)
+	return nil
 }
 
 func (c Codec) Format() codec.Format {
