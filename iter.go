@@ -32,7 +32,7 @@ func newIter(bucket *Bucket, prefix []byte) *Iter {
 		bucket: bucket,
 		txn:    txn,
 		it:     it,
-		prefix: bucket.internalKey(nil),
+		prefix: prefix,
 	}
 }
 
