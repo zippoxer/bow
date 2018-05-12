@@ -56,7 +56,7 @@ func (c Codec) Unmarshal(data []byte, v interface{}) error {
 			return err
 		}
 	}
-	return nil
+	return fmt.Errorf("%T is not a valid key type", v)
 }
 
 func (c Codec) Format() codec.Format {
