@@ -93,7 +93,6 @@ func (b *Bucket) GetBytes(key interface{}, in []byte) (out []byte, err error) {
 	if err != nil {
 		return nil, err
 	}
-	in = in[0:]
 	ik := b.internalKey(keyBytes)
 	err = b.db.db.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(ik)
@@ -114,7 +113,8 @@ func (b *Bucket) GetBytes(key interface{}, in []byte) (out []byte, err error) {
 		if size > cap(in) {
 			in = make([]byte, size)
 		}
-		out = append(in, value...)
+		copy(in, value)
+		out = in[:size]
 		return nil
 	})
 	return
