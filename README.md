@@ -183,7 +183,7 @@ msgp is a code generation tool and serialization library for [MessagePack](https
 //go:generate msgp
 ```
 
-* Replace any use of `bow.Id` in your structures with `msgp.Id`.
+* Replace any use of `bow.Id` in your structures with `string`. Since `bow.Id` is a `string`, you can convert between the two without any cost.
 
 * Import `github.com/zippoxer/bow/codec/msgp` and open a database with `msgp.Codec`:
 ```go
