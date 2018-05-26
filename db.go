@@ -228,6 +228,13 @@ func (db *DB) Buckets() []string {
 	return names
 }
 
+// Badger exposes the internal Badger database.
+// Use it to call Backup, Load or RunValueLogGC.
+// Do NOT perform Set operations as you may corrupt Bow.
+func (db *DB) Badger() *badger.DB {
+	return db.db
+}
+
 // Close releases all database resources.
 func (db *DB) Close() error {
 	err := db.bucketId.Release()
