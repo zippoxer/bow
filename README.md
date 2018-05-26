@@ -8,7 +8,7 @@ Bow is powered by [BadgerDB](https://github.com/dgraph-io/badger), implementing 
 
 ## Table of Contents
 
-* [Why Badger and not Bolt?](#why-badger-and-not-bolt-)
+* [Why Badger and not Bolt?](#why-badger-and-not-bolt)
 * [Getting Started](#getting-started)
   + [Installing](#installing)
   + [Opening a database](#opening-a-database)
@@ -19,7 +19,7 @@ Bow is powered by [BadgerDB](https://github.com/dgraph-io/badger), implementing 
   + [Iterating a bucket](#iterating-a-bucket)
     - [Prefix iteration](#prefix-iteration)
   + [Serialization](#serialization)
-    - [MessagePack with `tinylib/msgp`](#messagepack-with--tinylib-msgp-)
+    - [MessagePack with `tinylib/msgp`](#messagepack-with-tinylibmsgp)
 * [Upcoming](#upcoming)
   + [Key-only iteration](#key-only-iteration)
   + [Transactions](#transactions)
