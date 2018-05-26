@@ -20,11 +20,7 @@ type Iter struct {
 func newIter(bucket *Bucket, prefix []byte) *Iter {
 	prefix = bucket.internalKey(prefix)
 	opts := badger.DefaultIteratorOptions
-	prefetch := runtime.GOMAXPROCS(-1)
-	if prefetch < 128 {
-		prefetch = 128
-	}
-	opts.PrefetchSize = prefetch
+	opts.PrefetchSize = runtime.GOMAXPROCS(-1)
 	txn := bucket.db.db.NewTransaction(false)
 	it := txn.NewIterator(opts)
 	it.Seek(prefix)
