@@ -305,18 +305,16 @@ func (db *DB) readMeta(txn *badger.Txn) error {
 	if err != nil {
 		return err
 	}
-	b, err := item.Value()
-	if err != nil {
-		return err
-	}
-	return json.Unmarshal(b, &db.meta)
+	return item.Value(func(value []byte) error {
+		return json.Unmarshal(value, &db.meta)
+	})
 }
 
 func (db *DB) writeMeta(txn *badger.Txn) (err error) {
 	if txn == nil {
 		txn = db.db.NewTransaction(true)
 		defer func() {
-			err = txn.Commit(nil)
+			err = txn.Commit()
 		}()
 	}
 	b, err := json.Marshal(db.meta)

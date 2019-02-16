@@ -77,11 +77,9 @@ func (b *Bucket) Get(key interface{}, v interface{}) error {
 		if err != nil {
 			return err
 		}
-		value, err := item.Value()
-		if err != nil {
-			return err
-		}
-		return b.db.codec.Unmarshal(value, v)
+		return item.Value(func(value []byte) error {
+			return b.db.codec.Unmarshal(value, v)
+		})
 	})
 }
 
@@ -102,20 +100,18 @@ func (b *Bucket) GetBytes(key interface{}, in []byte) (out []byte, err error) {
 		if err != nil {
 			return err
 		}
-		value, err := item.Value()
-		if err != nil {
-			return err
-		}
-		size := len(value)
-		if size == 0 {
+		return item.Value(func(value []byte) error {
+			size := len(value)
+			if size == 0 {
+				return nil
+			}
+			if size > cap(in) {
+				in = make([]byte, size)
+			}
+			copy(in, value)
+			out = in[:size]
 			return nil
-		}
-		if size > cap(in) {
-			in = make([]byte, size)
-		}
-		copy(in, value)
-		out = in[:size]
-		return nil
+		})
 	})
 	return
 }

@@ -40,32 +40,34 @@ func (it *Iter) Next(result interface{}) bool {
 		it.it.Next()
 	}
 	if !it.it.ValidForPrefix(it.prefix) {
-		it.txn.Discard()
+		it.Close()
 		return false
 	}
 	item := it.it.Item()
 	ik := item.Key()
-	v, err := item.Value()
-	if err != nil {
-		it.err = err
-		return false
-	}
-	if it.resultType == nil {
-		it.resultType, err = newStructType(result, true)
-		if err != nil {
-			return false
+	err := item.Value(func(v []byte) error {
+		var err error
+		if it.resultType == nil {
+			it.resultType, err = newStructType(result, true)
+			if err != nil {
+				return err
+			}
 		}
-	}
-	err = it.bucket.db.codec.Unmarshal(v, result)
+		err = it.bucket.db.codec.Unmarshal(v, result)
+		if err != nil {
+			return err
+		}
+		err = it.resultType.value(result).setKey(ik[bucketIdSize:])
+		if err != nil {
+			return err
+		}
+		return nil
+	})
 	if err != nil {
 		it.err = err
 		return false
 	}
-	err = it.resultType.value(result).setKey(ik[bucketIdSize:])
-	if err != nil {
-		it.err = err
-		return false
-	}
+
 	if !it.advanced {
 		it.advanced = true
 	}
