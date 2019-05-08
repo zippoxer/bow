@@ -33,6 +33,9 @@ func newIter(bucket *Bucket, prefix []byte) *Iter {
 }
 
 func (it *Iter) Next(result interface{}) bool {
+	if it.err != nil {
+		return false
+	}
 	if it.closed {
 		return false
 	}
@@ -84,6 +87,9 @@ func (it *Iter) Err() error {
 // further results, Iter is closed automatically and it will suffice to check the
 // result of Err.
 func (it *Iter) Close() {
+	if it.err != nil {
+		return
+	}
 	it.closed = true
 	it.it.Close()
 	it.txn.Discard()

@@ -179,6 +179,15 @@ func TestReadOnly(t *testing.T) {
 	if !reflect.DeepEqual(a, a2) {
 		t.Fatal("Iter returns wrong data in read-only")
 	}
+
+	iter2 := db2.DB().Bucket("arrows2").Iter()
+	defer iter2.Close()
+	if iter.Next(&a) {
+		t.Fatal("Iter reads inexistant bucket in read-only")
+	}
+	if iter.Err() != nil {
+		t.Fatal(iter.Err())
+	}
 }
 
 type TestDB struct {
