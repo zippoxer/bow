@@ -3,6 +3,8 @@ package bow
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
+	"math/rand"
 	"os"
 	"reflect"
 	"testing"
@@ -139,9 +141,50 @@ func TestIterPut(t *testing.T) {
 	}
 }
 
+// Create a database and write to it, then close it, re-open with read-only and
+// try to read what we wrote.
+func TestReadOnly(t *testing.T) {
+	db := OpenTestDB(t)
+	defer db.Drop()
+
+	a1 := Arrow{Id: "123", Length: 10, Sharpness: 0.97}
+	db.Put("arrows", a1)
+
+	db.Close()
+
+	db2 := db.OpenAgain(SetReadOnly(true))
+	defer db2.Drop()
+
+	db2.DontGet("arrows", fmt.Sprint(rand.Intn(math.MaxInt64)))
+	db2.DontGet("arrows2", fmt.Sprint(rand.Intn(math.MaxInt64)))
+
+	var a2 Arrow
+	db2.Get("arrows", a1.Id, &a2)
+	if !reflect.DeepEqual(a1, a2) {
+		t.Fatal("Get returns wrong data in read-only")
+	}
+
+	iter := db2.DB().Bucket("arrows").Iter()
+	defer iter.Close()
+	var a Arrow
+	if !iter.Next(&a) {
+		t.Fatal("Iter returns nothing in read-only")
+	}
+	if iter.Next(&a) {
+		t.Fatal("Iter reads more than we wrote in read-only")
+	}
+	if iter.Err() != nil {
+		t.Fatal(iter.Err())
+	}
+	if !reflect.DeepEqual(a, a2) {
+		t.Fatal("Iter returns wrong data in read-only")
+	}
+}
+
 type TestDB struct {
 	t       *testing.T
 	db      *DB
+	closed  bool
 	dir     string
 	options []Option
 	msg     string
@@ -153,6 +196,16 @@ func OpenTestDB(t *testing.T, options ...Option) *TestDB {
 		t:    t,
 		dir:  tempfile("bow-"),
 		fail: t.Fatal,
+	}
+	tdb.Open(options...)
+	return tdb
+}
+
+func (t *TestDB) OpenAgain(options ...Option) *TestDB {
+	tdb := &TestDB{
+		t:    t.t,
+		dir:  t.dir,
+		fail: t.fail,
 	}
 	tdb.Open(options...)
 	return tdb
@@ -184,6 +237,15 @@ func (t *TestDB) Get(bucket string, key, v interface{}) {
 	}
 }
 
+// DontGet fails if Get doesn't return ErrNotFound.
+func (t *TestDB) DontGet(bucket string, key interface{}) {
+	var a Arrow
+	err := t.db.Bucket(bucket).Get(key, &a)
+	if err != ErrNotFound {
+		t.fail(err)
+	}
+}
+
 func (t *TestDB) Fatal() *TestDB {
 	tt := *t
 	tt.fail = t.t.Fatal
@@ -207,10 +269,14 @@ func (t *TestDB) DB() *DB {
 }
 
 func (t *TestDB) Close() {
+	if t.closed {
+		return
+	}
 	err := t.db.Close()
 	if err != nil {
 		t.fail(err)
 	}
+	t.closed = true
 }
 
 func (t *TestDB) Drop() {

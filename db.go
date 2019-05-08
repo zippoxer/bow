@@ -20,7 +20,8 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("record doesn't exist")
+	ErrNotFound = errors.New("Record doesn't exist")
+	ErrReadOnly = errors.New("Put and Delete aren't allowed in read-only mode")
 )
 
 // version increases when backwards-incompatible change is introduced,
@@ -124,6 +125,13 @@ func (id *Id) Unmarshal(b []byte) error {
 // Option is a function that configures a DB.
 type Option func(db *DB) error
 
+func SetReadOnly(readOnly bool) Option {
+	return func(db *DB) error {
+		db.readOnly = readOnly
+		return nil
+	}
+}
+
 func SetCodec(c codec.Codec) Option {
 	return func(db *DB) error {
 		db.codec = c
@@ -145,6 +153,7 @@ type DB struct {
 	metaMu   sync.RWMutex
 	bucketId *badger.Sequence
 
+	readOnly      bool
 	codec         codec.Codec
 	badgerOptions badger.Options
 }
@@ -161,12 +170,22 @@ func Open(dir string, options ...Option) (*DB, error) {
 		badgerOptions: badger.DefaultOptions,
 		codec:         jsoncodec.Codec{},
 	}
+
+	// Apply options.
 	for _, option := range options {
 		err := option(db)
 		if err != nil {
 			return nil, err
 		}
 	}
+
+	// Sync db.readOnly with db.badgerOptions.ReadOnly
+	if db.readOnly || db.badgerOptions.ReadOnly {
+		db.readOnly = true
+		db.badgerOptions.ReadOnly = true
+	}
+
+	// Propagate options down to badgerOptions.
 	if db.badgerOptions.Dir == "" {
 		db.badgerOptions.Dir = dir
 	}
@@ -186,17 +205,21 @@ func Open(dir string, options ...Option) (*DB, error) {
 			Version: version,
 			Buckets: make(map[string]bucketMeta),
 		}
-		err = db.writeMeta(nil)
-		if err != nil {
-			return nil, err
+		if !db.readOnly {
+			err = db.writeMeta(nil)
+			if err != nil {
+				return nil, err
+			}
 		}
 	} else if err != nil {
 		return nil, err
 	}
 
-	db.bucketId, err = db.db.GetSequence(bucketIdSequence, 1e3)
-	if err != nil {
-		return nil, err
+	if !db.readOnly {
+		db.bucketId, err = db.db.GetSequence(bucketIdSequence, 1e3)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return db, nil
@@ -208,6 +231,9 @@ func Open(dir string, options ...Option) (*DB, error) {
 func (db *DB) Bucket(name string) *Bucket {
 	bucket, ok := db.bucket(name)
 	if !ok {
+		if db.readOnly {
+			return &Bucket{err: ErrNotFound}
+		}
 		bucket, err := db.createBucket(nil, name)
 		if err != nil {
 			return &Bucket{err: err}
@@ -237,9 +263,11 @@ func (db *DB) Badger() *badger.DB {
 
 // Close releases all database resources.
 func (db *DB) Close() error {
-	err := db.bucketId.Release()
-	if err != nil {
-		return err
+	if db.bucketId != nil {
+		err := db.bucketId.Release()
+		if err != nil {
+			return err
+		}
 	}
 	return db.db.Close()
 }

@@ -16,6 +16,9 @@ type Bucket struct {
 // Put persists a record into the bucket. If a record with the same key already
 // exists, then it will be updated.
 func (b *Bucket) Put(v interface{}) error {
+	if b.db.readOnly {
+		return ErrReadOnly
+	}
 	if b.err != nil {
 		return b.err
 	}
@@ -35,6 +38,9 @@ func (b *Bucket) Put(v interface{}) error {
 }
 
 func (b *Bucket) PutBytes(key interface{}, data []byte) error {
+	if b.db.readOnly {
+		return ErrReadOnly
+	}
 	if b.err != nil {
 		return b.err
 	}
@@ -118,6 +124,9 @@ func (b *Bucket) GetBytes(key interface{}, in []byte) (out []byte, err error) {
 
 // Delete removes a record from the bucket by key.
 func (b *Bucket) Delete(key interface{}) error {
+	if b.db.readOnly {
+		return ErrReadOnly
+	}
 	if b.err != nil {
 		return b.err
 	}
@@ -133,19 +142,23 @@ func (b *Bucket) Delete(key interface{}) error {
 
 // Iter returns an iterator for all the records in the bucket.
 func (b *Bucket) Iter() *Iter {
+	if b.err != nil {
+		return &Iter{err: b.err}
+	}
 	iter := newIter(b, nil)
-	iter.err = b.err
 	return iter
 }
 
 // Prefix returns an iterator for all the records whose key has the given prefix.
 func (b *Bucket) Prefix(prefix interface{}) *Iter {
+	if b.err != nil {
+		return &Iter{err: b.err}
+	}
 	key, err := keyCodec.Marshal(prefix, nil)
 	if err != nil {
 		return &Iter{err: err}
 	}
 	iter := newIter(b, key)
-	iter.err = b.err
 	return iter
 }
 
