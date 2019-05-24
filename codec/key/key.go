@@ -21,13 +21,38 @@ func (c Codec) Marshal(v interface{}, in []byte) ([]byte, error) {
 		return []byte(k), nil
 	case byte:
 		return []byte{k}, nil
-	case uint16, uint32, uint64, uint, *uint16, *uint32, *uint64, *uint,
-		[]uint16, []uint32, []uint64, []uint, int8, int16, int32, int64, int,
-		*int8, *int16, *int32, *int64, *int, []int8, []int16, []int32, []int64, []int:
+	case uint16, uint32, uint64, *uint16, *uint32, *uint64,
+		[]uint16, []uint32, []uint64, int8, int16, int32, int64,
+		*int8, *int16, *int32, *int64, []int8, []int16, []int32, []int64:
 		b := bytes.NewBuffer(make([]byte, 8))
 		if err := binary.Write(b, binary.BigEndian, k); err != nil {
 			return nil, err
 		}
+		return b.Bytes(), nil
+	case int:
+		return c.Marshal(int64(k), in)
+	case uint:
+		return c.Marshal(uint64(k), in)
+	case *int:
+		return c.Marshal(int64(*k), in)
+	case *uint:
+		return c.Marshal(uint64(*k), in)
+	case []int:
+		b := bytes.NewBuffer(make([]byte, len(k)*8))
+		for _, n := range k {
+			if err := binary.Write(b, binary.BigEndian, int64(n)); err != nil {
+				return nil, err
+			}
+		}
+		return b.Bytes(), nil
+	case []uint:
+		b := bytes.NewBuffer(make([]byte, len(k)*8))
+		for _, n := range k {
+			if err := binary.Write(b, binary.BigEndian, uint64(n)); err != nil {
+				return nil, err
+			}
+		}
+		return b.Bytes(), nil
 	}
 	return nil, fmt.Errorf("%T is not a valid key type", v)
 }

@@ -141,6 +141,38 @@ func TestIterPut(t *testing.T) {
 	}
 }
 
+// Tests different types for keys.
+func TestKeys(t *testing.T) {
+	db := OpenTestDB(t)
+	defer db.Drop()
+
+	// Test int.
+	type inty struct {
+		ID int `bow:"key"`
+	}
+	db.Put("cats", inty{
+		ID: 123,
+	})
+	var cat inty
+	db.Get("cats", 123, &cat)
+	if cat.ID != 123 {
+		t.Fatalf("Got ID %d", cat.ID)
+	}
+
+	// Test uint.
+	type uinty struct {
+		ID int `bow:"key"`
+	}
+	db.Put("dogs", uinty{
+		ID: 123,
+	})
+	var dog uinty
+	db.Get("dogs", 123, &dog)
+	if dog.ID != 123 {
+		t.Fatalf("Got ID %d", dog.ID)
+	}
+}
+
 // Create a database and write to it, then close it, re-open with read-only and
 // try to read what we wrote.
 func TestReadOnly(t *testing.T) {
