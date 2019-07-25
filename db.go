@@ -167,7 +167,7 @@ type DB struct {
 // Make sure to call Close after you're done.
 func Open(dir string, options ...Option) (*DB, error) {
 	db := &DB{
-		badgerOptions: badger.DefaultOptions,
+		badgerOptions: badger.DefaultOptions(dir),
 		codec:         jsoncodec.Codec{},
 	}
 
