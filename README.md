@@ -84,7 +84,7 @@ type Page struct {
 }
 ```
 
-Keys must be a string, a byte slice, any built-in integer or a type that implements [`codec.Marshaler`](https://godoc.org/github.com/zippoxer/bow/codec#Marshaler) and [`codec.Unmarshaler`](https://godoc.org/github.com/zippoxer/bow/codec#Unmarshaler).
+Keys must be a string, a byte slice, any built-in integer of at least 32 bits (int32, uint32 and above) or a type that implements [`codec.Marshaler`](https://godoc.org/github.com/zippoxer/bow/codec#Marshaler) and [`codec.Unmarshaler`](https://godoc.org/github.com/zippoxer/bow/codec#Unmarshaler).
 
 #### Randomly generated keys
 
