@@ -139,6 +139,13 @@ func SetCodec(c codec.Codec) Option {
 	}
 }
 
+func SetLogger(logger badger.Logger) Option {
+	return func(db *DB) error {
+		db.badgerOptions.Logger = logger
+		return nil
+	}
+}
+
 func SetBadgerOptions(o badger.Options) Option {
 	return func(db *DB) error {
 		db.badgerOptions = o
