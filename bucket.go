@@ -1,7 +1,7 @@
 package bow
 
 import (
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 )
 
 type bucketId [bucketIdSize]byte

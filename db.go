@@ -10,7 +10,7 @@ import (
 	"math/rand"
 	"sync"
 
-	"github.com/dgraph-io/badger"
+	"github.com/dgraph-io/badger/v2"
 
 	"github.com/zippoxer/bow/codec"
 	jsoncodec "github.com/zippoxer/bow/codec/json"
