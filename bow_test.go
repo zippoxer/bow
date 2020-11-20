@@ -1,6 +1,8 @@
 package bow
 
 import (
+	"context"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -31,7 +33,47 @@ func Test(t *testing.T) {
 	db := OpenTestDB(t)
 	defer db.Drop()
 
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
 	a1 := Arrow{Id: "123", Length: 10, Sharpness: 0.97}
+	a2 := Arrow{Id: a1.Id, Length: 8, Sharpness: 0.98}
+	a3 := Arrow{Id: "456", Length: 5, Sharpness: 1.00}
+	count := 0
+	go func() {
+		err := db.db.Bucket("arrows").Subscribe(ctx, &Arrow{}, func(v interface{}) error {
+			count ++
+			a, ok := v.(*Arrow)
+			if !ok {
+				t.Errorf("subscribe: received unexpected value type: %s", reflect.TypeOf(v).String())
+				return errors.New("unexpected value type")
+			}
+			if v == nil {
+				t.Errorf("subscribe: received unexpected nil value")
+				return errors.New("unexpected nil value")
+			}
+			switch count {
+			case 1:
+				if !reflect.DeepEqual(a1, *a) {
+					t.Errorf("expected %v got %v", a1, *a)
+				}
+			case 2:
+				if !reflect.DeepEqual(a2, *a) {
+					t.Errorf("expected %v got %v", a2, *a)
+				}
+			case 3:
+				if !reflect.DeepEqual(a3, *a) {
+					t.Errorf("expected %v got %v", a3, *a)
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			t.Errorf("failed to subscribe to bucket changes: %v", err)
+		}
+	}()
+
+
 	db.Put("arrows", a1)
 	var got Arrow
 	db.Get("arrows", a1.Id, &got)
@@ -40,7 +82,6 @@ func Test(t *testing.T) {
 	}
 
 	// Put with same id, should update.
-	a2 := Arrow{Id: a1.Id, Length: 8, Sharpness: 0.98}
 	db.Put("arrows", a2)
 	db.Get("arrows", a1.Id, &got)
 	if !reflect.DeepEqual(a2, got) {
@@ -48,7 +89,6 @@ func Test(t *testing.T) {
 	}
 
 	// Put with another id, should insert.
-	a3 := Arrow{Id: "456", Length: 5, Sharpness: 1.00}
 	db.Put("arrows", a3)
 	db.Get("arrows", "456", &got)
 	if !reflect.DeepEqual(a3, got) {
@@ -68,8 +108,12 @@ func Test(t *testing.T) {
 		t.Fatal("object changed for no reason")
 	}
 
+	if count != 3 {
+		t.Errorf("subscribe: wanted 3 call, got %d", count)
+	}
 	// Re-open the database.
 	db.Close()
+	cancel()
 	db.Open()
 
 	// Make sure we got all the buckets.

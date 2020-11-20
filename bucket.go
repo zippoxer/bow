@@ -1,6 +1,9 @@
 package bow
 
 import (
+	"context"
+	"errors"
+
 	"github.com/dgraph-io/badger/v2"
 )
 
@@ -160,6 +163,21 @@ func (b *Bucket) Prefix(prefix interface{}) *Iter {
 	}
 	iter := newIter(b, key)
 	return iter
+}
+
+func (b *Bucket) Subscribe(ctx context.Context, typ interface{}, fn func(v interface{}) error) error {
+	if fn == nil {
+		return errors.New("handle func cannot be nil")
+	}
+	return b.db.db.Subscribe(ctx, func(kv *badger.KVList) error {
+		for _, v := range kv.Kv {
+			if err := b.db.codec.Unmarshal(v.Value, typ); err != nil {
+				return err
+			}
+			return fn(typ)
+		}
+		return nil
+	}, b.id[:])
 }
 
 // internalKey returns key prefixed with the bucket's id.
