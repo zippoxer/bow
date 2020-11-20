@@ -6,6 +6,7 @@ const (
 	Binary Format = iota
 	JSON
 	MessagePack
+	Protobuf
 )
 
 // Codec marshals and unmarshals types.
@@ -30,7 +31,7 @@ type Marshaler interface {
 	Marshal(in []byte) (out []byte, err error)
 }
 
-// Marshaler is the interface implemented
+// Unmarshaler is the interface implemented
 // by types that can unmarshal themselves.
 type Unmarshaler interface {
 	Unmarshal(data []byte) error
